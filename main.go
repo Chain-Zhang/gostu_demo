@@ -4,8 +4,15 @@ import (
 	"time"
 	"fmt"
 	"gostu_demo/orm"
+	"gostu_demo/webser"
 	_ "github.com/go-sql-driver/mysql"
 )
+
+
+func main(){
+	webser.Start()
+}
+
 
 type UserInfo struct{
 	TableName orm.TableName "userinfo"
@@ -14,11 +21,6 @@ type UserInfo struct{
 	DepartName string `name:"departname"`
 	Created string `name:"created"`
 }
-
-func main(){
-    ormTest()
-}
-
 
 func ormTest(){
 	ui := UserInfo{UserName:"CHAIN", DepartName:"TEST", Created:time.Now().String()}
