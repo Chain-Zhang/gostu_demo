@@ -1,15 +1,10 @@
 package main
 
 import (
-	"io"
-	"bufio"
-	"os"
 	"time"
 	"fmt"
 	"gostu_demo/orm"
 	_ "github.com/go-sql-driver/mysql"
-	"os/exec"
-	"strings"
 )
 
 type UserInfo struct{
@@ -21,40 +16,9 @@ type UserInfo struct{
 }
 
 func main(){
-	name := "cmd"
-	params := []string{"/c", "adb", "devices"}
-	 if exeCommand(name, params){
-		 fmt.Println("success")
-	 }else{
-		 fmt.Println("error")
-	 }
+    ormTest()
 }
 
-func exeCommand(cmdName string, params []string) bool{
-	cmd := exec.Command(cmdName, params...)
-	fmt.Printf("执行命令: %s\n", strings.Join(cmd.Args[2:], " ")) 
-	stdout, err := cmd.StdoutPipe()
-	if err != nil{
-		fmt.Println(os.Stderr, "error => ", err.Error())
-		return false
-	}
-	cmd.Start()
-	reader := bufio.NewReader(stdout)
-	var index int
-
-	var contents []string
-	for {
-		line, err := reader.ReadString('\n')
-		if err != nil || err == io.EOF{
-			break
-		}
-		fmt.Println(line)
-		index ++
-		contents = append(contents, line)
-	}
-	cmd.Wait()
-	return true
-}
 
 func ormTest(){
 	ui := UserInfo{UserName:"CHAIN", DepartName:"TEST", Created:time.Now().String()}
