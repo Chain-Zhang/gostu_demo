@@ -59,7 +59,7 @@ func exeCommand(cmdName string, params []string) bool{
 func ormTest(){
 	ui := UserInfo{UserName:"CHAIN", DepartName:"TEST", Created:time.Now().String()}
 	orm.Register(new(UserInfo))
-	db, err := orm.NewDb("mysql", "root:chain.123@tcp(106.14.224.234:3306)/demo?charset=utf8")
+	db, err := orm.NewDb("mysql", "root:password@tcp(xxx.xx.xxx.xxxx:3306)/demo?charset=utf8")
 	if err != nil {
 		fmt.Println("打开SQL时出错:", err.Error())
 		return
