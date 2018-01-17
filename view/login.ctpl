@@ -1,0 +1,14 @@
+<html> 
+<head> 
+    <title></title> 
+</head> 
+<body> 
+    <form action="http://localhost:9090/login" method="post"> 
+        用户名:<input type="text" name="username">    
+        年龄:<input type="number" name="age">
+        邮箱：<input type="text" name="email">
+        <input type="hidden" name="token" value="{{.}}"> 
+        <input type="submit" value="注册"> 
+    </form> 
+</body> 
+</html>

@@ -1,10 +1,18 @@
 package webser
 
 import (
-	"strings"
+	"encoding/hex"
+	//"io"
+	"crypto/md5"
 	"fmt"
-	"net/http"
+	"strings"
+	"strconv"
+	"regexp"
 	"log"
+	"time"
+
+	"net/http"
+	"html/template"
 )
 
 type MyMux struct{
@@ -17,6 +25,10 @@ func (p *MyMux)ServeHTTP(w http.ResponseWriter, r *http.Request){
 	}
 	if r.URL.Path == "/about"{
 		about(w, r)
+		return
+	}
+	if r.URL.Path == "/login"{
+		login(w,r)
 		return
 	}
 	http.NotFound(w,r)
@@ -38,6 +50,36 @@ func sayHelloName(w http.ResponseWriter, r *http.Request){
 
 func about(w http.ResponseWriter, r *http.Request){
 	fmt.Fprintf(w, "i am chain, from shanghai")
+}
+
+func login(w http.ResponseWriter, r *http.Request){
+	r.ParseForm() //解析form
+	fmt.Println("method: ", r.Method)
+	if r.Method == "GET"{
+		time := time.Now().Unix()
+		h := md5.New()
+		h.Write([]byte(strconv.FormatInt(time,10)))
+		//io.WriteString(h, strconv.FormatInt(time,10))
+		token := fmt.Sprintf("s%", hex.EncodeToString(h.Sum(nil)))
+		t, _ := template.ParseFiles("./view/login.ctpl")
+		t.Execute(w, token)
+	}else if r.Method == "POST"{
+		if len(r.Form["username"][0])==0{
+			fmt.Fprintf(w, "username: null or empty \n")
+		}
+		age, err := strconv.Atoi(r.Form.Get("age"))
+		if err != nil{
+			fmt.Fprintf(w, "age: The format of the input is not correct \n")
+		}
+		if age < 18{
+			fmt.Fprintf(w, "age: Minors are not registered \n")
+		}
+
+		if m, _ := regexp.MatchString(`^([\w\.\_]{2,10})@(\w{1,}).([a-z]{2,4})$`,
+		    r.Form.Get("email")); !m {    
+				fmt.Fprintf(w, "email: The format of the input is not correct \n")
+		}
+	}
 }
 
 func Start(){
