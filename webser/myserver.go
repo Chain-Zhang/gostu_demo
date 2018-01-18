@@ -1,6 +1,8 @@
 package webser
 
 import (
+	"io"
+	"os"
 	"encoding/hex"
 	//"io"
 	"crypto/md5"
@@ -31,6 +33,10 @@ func (p *MyMux)ServeHTTP(w http.ResponseWriter, r *http.Request){
 		login(w,r)
 		return
 	}
+	if r.URL.Path == "/upload"{
+		upload(w,r)
+		return
+	}
 	http.NotFound(w,r)
 	return
 }
@@ -59,11 +65,16 @@ func login(w http.ResponseWriter, r *http.Request){
 		time := time.Now().Unix()
 		h := md5.New()
 		h.Write([]byte(strconv.FormatInt(time,10)))
-		//io.WriteString(h, strconv.FormatInt(time,10))
-		token := fmt.Sprintf("s%", hex.EncodeToString(h.Sum(nil)))
+		token := hex.EncodeToString(h.Sum(nil))
 		t, _ := template.ParseFiles("./view/login.ctpl")
 		t.Execute(w, token)
 	}else if r.Method == "POST"{
+		token := r.Form.Get("token")
+        if token != "" {
+            //验证token的合法性
+        } else {
+            //不存在token报错
+        }
 		if len(r.Form["username"][0])==0{
 			fmt.Fprintf(w, "username: null or empty \n")
 		}
@@ -79,6 +90,46 @@ func login(w http.ResponseWriter, r *http.Request){
 		    r.Form.Get("email")); !m {    
 				fmt.Fprintf(w, "email: The format of the input is not correct \n")
 		}
+	}
+}
+
+func upload(w http.ResponseWriter, r *http.Request){
+	r.ParseForm()
+	if r.Method == "GET"{
+        time := time.Now().Unix()
+		h := md5.New()
+		h.Write([]byte(strconv.FormatInt(time,10)))
+		token := hex.EncodeToString(h.Sum(nil))
+		t, _ := template.ParseFiles("./view/upload.ctpl")
+		t.Execute(w, token)
+	}else if r.Method == "POST"{
+		token := r.Form.Get("token")
+        if token != "" {
+			//验证token的合法性
+			fmt.Println("token: ", token)
+        } else {
+			//不存在token报错
+			fmt.Println("token is nil or empty")
+        }
+		//把上传的文件存储在内存和临时文件中
+		r.ParseMultipartForm(32 << 20)
+		//获取文件句柄，然后对文件进行存储等处理
+		file, handler, err := r.FormFile("uploadfile")
+		if err != nil{
+			fmt.Println("form file err: ", err)
+			return
+		}
+		defer file.Close()
+		fmt.Fprintf(w, "%v", handler.Header)
+		//创建上传的目的文件
+		f, err := os.OpenFile("./files/" + handler.Filename, os.O_WRONLY | os.O_CREATE, 0666)
+		if err != nil{
+			fmt.Println("open file err: ", err)
+			return
+		}
+		defer f.Close()
+		//拷贝文件
+		io.Copy(f, file)
 	}
 }
 

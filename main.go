@@ -1,6 +1,13 @@
 package main
 
 import (
+	"strings"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"mime/multipart"
+	"bytes"
 	"time"
 	"fmt"
 	"gostu_demo/orm"
@@ -10,7 +17,52 @@ import (
 
 
 func main(){
+    go uploadfile("d:/photo/cut.png", "http://localhost:9090/upload")
 	webser.Start()
+}
+
+func uploadfile(filename string, url string){
+    time.Sleep(30 * time.Second)
+	bodyBuf := &bytes.Buffer{}
+	bodyWriter :=multipart.NewWriter(bodyBuf)
+	//模拟创建form表单字段
+	strs := strings.Split(filename, "/")
+	destname := strs[len(strs) - 1]
+	filewriter, err := bodyWriter.CreateFormFile("uploadfile", destname)
+	if err != nil{
+		fmt.Println("error writing to buffer")
+		return
+	}
+    //打开文件句柄操作
+	fh, err := os.Open(filename)
+	if err != nil{
+		fmt.Println("error open file")
+		return
+	}
+	defer fh.Close()
+
+	//拷贝文件
+	_, err = io.Copy(filewriter, fh)
+	if err != nil{
+		fmt.Println("error copy file")
+		return
+	}
+	contentType := bodyWriter.FormDataContentType()
+	bodyWriter.Close()
+
+	resp, err := http.Post(url, contentType, bodyBuf)
+	if err != nil{
+		fmt.Println("error post buffer")
+		return
+	}
+	defer resp.Body.Close()
+	resp_body, err := ioutil.ReadAll(resp.Body)
+	if err != nil{
+		fmt.Println("error read all")
+		return
+	}
+	fmt.Println(resp.Status)
+	fmt.Println(string(resp_body))
 }
 
 
